@@ -1,0 +1,86 @@
+# Three honeypot replicas on one machine — no port fights.
+# Run:  docker compose -f docker-compose.replicas.yml up --build -d
+# Stop: docker compose -f docker-compose.replicas.yml down
+#
+# Replica A = standard ports (identical to docker-compose.yml)
+# Replica B = standard + 100
+# Replica C = standard + 200
+# Each replica writes its own events.jsonl into ./logs-a, ./logs-b, ./logs-c.
+# See REPLICAS.md for the full port map.
+
+x-honeypot: &honeypot-common
+  build: .
+  restart: unless-stopped
+  read_only: true          # container filesystem can't be modified...
+  tmpfs:
+    - /tmp                  # ...except scratch space here
+  cap_drop:
+    - ALL                   # strip every Linux capability...
+  cap_add:
+    - NET_BIND_SERVICE      # ...except binding privileged ports
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  honeypot-a:
+    <<: *honeypot-common
+    container_name: honeypot-a
+    ports:
+      - "21:21"       # ftp
+      - "22:22"       # ssh
+      - "23:23"       # telnet
+      - "25:25"       # smtp
+      - "80:80"       # http
+      - "1433:1433"   # mssql
+      - "2375:2375"   # docker
+      - "3306:3306"   # mysql
+      - "3389:3389"   # rdp
+      - "5432:5432"   # postgres
+      - "5900:5900"   # vnc
+      - "6379:6379"   # redis
+      - "9200:9200"   # elasticsearch
+      - "27017:27017" # mongodb
+    volumes:
+      - ./logs-a:/app/logs   # replica A's events land here
+
+  honeypot-b:
+    <<: *honeypot-common
+    container_name: honeypot-b
+    ports:
+      - "121:21"      # ftp
+      - "122:22"      # ssh
+      - "123:23"      # telnet
+      - "125:25"      # smtp
+      - "180:80"      # http
+      - "1533:1433"   # mssql
+      - "2475:2375"   # docker
+      - "3406:3306"   # mysql
+      - "3489:3389"   # rdp
+      - "5532:5432"   # postgres
+      - "6000:5900"   # vnc
+      - "6479:6379"   # redis
+      - "9300:9200"   # elasticsearch
+      - "27117:27017" # mongodb
+    volumes:
+      - ./logs-b:/app/logs   # replica B's events land here
+
+  honeypot-c:
+    <<: *honeypot-common
+    container_name: honeypot-c
+    ports:
+      - "221:21"      # ftp
+      - "222:22"      # ssh
+      - "223:23"      # telnet
+      - "225:25"      # smtp
+      - "280:80"      # http
+      - "1633:1433"   # mssql
+      - "2575:2375"   # docker
+      - "3506:3306"   # mysql
+      - "3589:3389"   # rdp
+      - "5632:5432"   # postgres
+      - "6100:5900"   # vnc
+      - "6579:6379"   # redis
+      - "9400:9200"   # elasticsearch
+      - "27217:27017" # mongodb
+    volumes:
+      - ./logs-c:/app/logs   # replica C's events land here

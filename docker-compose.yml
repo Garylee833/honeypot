@@ -1,0 +1,32 @@
+# Sandboxed honeypot. Run:  docker compose up --build -d
+services:
+  honeypot:
+    build: .
+    container_name: honeypot
+    restart: unless-stopped
+    ports:
+      - "21:21"     # ftp
+      - "22:22"     # ssh
+      - "23:23"     # telnet
+      - "25:25"     # smtp
+      - "80:80"     # http
+      - "1433:1433" # mssql
+      - "2375:2375" # docker
+      - "3306:3306" # mysql
+      - "3389:3389" # rdp
+      - "5432:5432" # postgres
+      - "5900:5900" # vnc
+      - "6379:6379" # redis
+      - "9200:9200" # elasticsearch
+      - "27017:27017" # mongodb
+    volumes:
+      - ./logs:/app/logs   # logs survive container restarts, readable from host
+    read_only: true         # container filesystem can't be modified...
+    tmpfs:
+      - /tmp                # ...except scratch space here
+    cap_drop:
+      - ALL                 # strip every Linux capability...
+    cap_add:
+      - NET_BIND_SERVICE    # ...except binding privileged ports
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,17 @@
+[Unit]
+Description=Educational honeypot (fake services + fake shell)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/hatch/workspace/your_files/honeypot
+ExecStart=/usr/bin/python3 /home/hatch/workspace/your_files/honeypot/honeypot.py --log /home/hatch/workspace/your_files/honeypot/logs/events.jsonl
+Restart=always
+RestartSec=15
+StandardOutput=append:/home/hatch/workspace/your_files/honeypot/logs/stdout.log
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target
